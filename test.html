@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RTSP to FLV over WebSocket</title>
+    <style>
+        #videoElement {
+            width: 640px; /* 根据需要调整 */
+            height: 480px;
+            background-color: #000; /* 视频加载前的背景色 */
+        }
+    </style>
+</head>
+<body>
+<video id="videoElement" controls></video>
+
+<script src="./flv.min.js"></script>
+<script>
+    if (typeof flvjs !== 'undefined') {
+        console.log('flv.js loaded!');
+        if (flvjs.isSupported()) {
+            console.log('flv.js is supported!');
+        } else {
+            console.log('flv.js is NOT supported!');
+        }
+    } else {
+        console.log('flv.js FAILED to load!');
+    }
+    if (flvjs.isSupported) { // Corrected line
+        const videoElement = document.getElementById('videoElement');
+        const flvPlayer = flvjs.createPlayer({
+                type: 'flv',
+                url: `ws://localhost:8100/rtsp/?url=` + btoa('rtsp://admin:a1234567@192.168.11.115:554/h264/ch1/main/av_stream'),
+                isLive: true,
+                hasAudio: false,
+            },
+            {
+                enableStashBuffer: false,
+            });
+
+        flvPlayer.attachMediaElement(videoElement);
+        flvPlayer.load();
+        flvPlayer.play();
+
+        flvPlayer.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
+            console.error("FLV player error:", errorType, errorDetail, errorInfo);
+        });
+
+        flvPlayer.on(flvjs.Events.MEDIA_INFO, (mediaInfo) => {
+            console.log("Media Info:", mediaInfo);
+        });
+
+        flvPlayer.on(flvjs.Events.STATISTICS_INFO, (statisticsInfo) => {
+            console.log("Statistics Info:", statisticsInfo);
+        });
+
+    } else {
+        console.error('Your browser does not support flv.js!');
+        document.getElementById('videoElement').style.display = 'none';
+        const messageElement = document.createElement('p');
+        messageElement.textContent = 'Your browser does not support flv.js. Please use a modern browser like Chrome, Firefox, or Edge.';
+        document.body.appendChild(messageElement);
+    }
+</script>
+</body>
+</html>
